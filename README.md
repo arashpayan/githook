@@ -4,7 +4,7 @@ Go program that receives GitHub Webhooks then executes scripts for repo deployme
 
 Building
 --------
-To build, make sure you have the Go tools installed then run `go build githook.go`
+To build, make sure you have the Go tools installed then run `go build`
 
 Running
 -------
@@ -14,10 +14,10 @@ Running
 
     [
         {
-            "RepoUrl": "https://github.com/<username>/<reponame>",
-            "RepoBranch": "refs/heads/master",
-            "DeployScript": "/path/to/deployment/script.sh",
-            "DeployScriptArgumets": [ "arg1", "arg2", "arg3" ]
+            "url": "https://github.com/<username>/<reponame>",
+            "branch": "refs/heads/master",
+            "deployment_script": "/path/to/deployment/script.sh",
+            "deployment_arguments": [ "arg1", "arg2", "arg3" ]
         }
     ]
 
@@ -27,7 +27,7 @@ To execute and keep the program running in the background after you log out:
 
 License
 -------
-Copyright 2014 Arash Payan
+Copyright 2016 Arash Payan
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

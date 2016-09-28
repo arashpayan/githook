@@ -12,14 +12,14 @@ import (
 	"path"
 )
 
-type Rule struct {
-	RepoUrl               string
-	RepoBranch            string
-	DeployScript          string
-	DeployScriptArguments []string
+type repoRule struct {
+	URL                 string   `json:"url"`
+	Branch              string   `json:"branch"`
+	DeploymentScript    string   `json:"deployment_script"`
+	DeploymentArguments []string `json:"deplyoyment_arguments"`
 }
 
-var WebhookRules []Rule = []Rule{}
+var webhookRules = make([]repoRule, 0, 0)
 
 func main() {
 	port := flag.Int("port", 8080, "Listening port for GitHub webhooks")
@@ -60,12 +60,12 @@ func loadRules(rulesPath string) {
 	if err != nil {
 		log.Fatalf("Unable to read data from rules file: %v", err)
 	}
-	err = json.Unmarshal(fileBytes, &WebhookRules)
+	err = json.Unmarshal(fileBytes, &webhookRules)
 	if err != nil {
 		log.Fatalf("Error unmarshalling JSON from rules file: %v", err)
 	}
 
-	log.Printf("Loaded rules:\n%v", WebhookRules)
+	log.Printf("Loaded rules:\n%v", webhookRules)
 }
 
 func hookHandler(w http.ResponseWriter, r *http.Request) {
@@ -93,13 +93,13 @@ func hookHandler(w http.ResponseWriter, r *http.Request) {
 	branch := hookPayload["ref"].(string)
 
 	// check if we have a rule for this event
-	for i, _ := range WebhookRules {
-		if url == WebhookRules[i].RepoUrl &&
-			branch == WebhookRules[i].RepoBranch {
+	for i := range webhookRules {
+		if url == webhookRules[i].URL &&
+			branch == webhookRules[i].Branch {
 			// perform a deploy
 			msg := fmt.Sprintf("Deploying %s\n\n", hookPayload["after"].(string))
 			w.Write([]byte(msg))
-			output, err := deploy(&WebhookRules[i])
+			output, err := deploy(&webhookRules[i])
 
 			if err != nil {
 				w.Write([]byte(fmt.Sprintf("Error deploying: %v", err)))
@@ -110,9 +110,8 @@ func hookHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func deploy(rule *Rule) ([]byte, error) {
-	// if you're wondering what the ... is, Google for variadics AND golang
-	c := exec.Command(rule.DeployScript, rule.DeployScriptArguments...)
-	c.Dir = path.Dir(rule.DeployScript)
+func deploy(rule *repoRule) ([]byte, error) {
+	c := exec.Command(rule.DeploymentScript, rule.DeploymentArguments...)
+	c.Dir = path.Dir(rule.DeploymentScript)
 	return c.CombinedOutput()
 }
